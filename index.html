@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>bezier demo</title>
+<style type="text/css">
+body{margin:0;position:relative;}
+img{width:24px;height:24px;border:0}
+.mycancas{float:left; width:800px;height:600px;border:1px solid #CCC;}
+.s{margin-top:14px;}
+.s div{height:25px;}
+.tip{float: left;border: 1px solid #CCC;min-height: 100px; max-height:600px; overflow-y:auto; width: 300px;margin-left: 14px;margin-top: 10px;}
+</style>
+</head>
+<body>
+<div class="mycancas">
+	<canvas id="screen" width="800" height="600">骚瑞，您的浏览器不支持canvas</canvas>
+	<img src="start.jpg" id='startImg' alt="startImg" style='position:absolute; display:none;'/>
+	<img src="end.png" id='endImg' alt="endImg" style='position:absolute; display:none;'/>
+</div>
+<div style='float:left;'>
+	<div id='point'>x:0 ;y:0</div>
+	<div class='s'>
+		<div><a href='javascript:;' id='startBtn'><img src="start.jpg" alt="start" title='起点'/></a></div>
+		------------<br/>
+		<div><a href='javascript:;' id='endBtn'><img src="end.png" alt="end" title='终点'/></a></div>
+		------------<br/> 
+		<input type="button" id="tangent" value="画切线" /> <br/>
+		<input type="number" id="start" placeholder="起点所在的区域" style="display:none;" /> <br/>
+		<input type="number" id="end" placeholder="终点所在的区域" style="display:none;" /> <br/>
+		<input type="button" id="finish" value="完成"/>
+	</div>
+</div>
+<div id="tip" class="tip">
+	
+</div>
+</body>
+</html>
+<script type="text/javascript" src="jquery-1.7.2-min.js"></script>
+<script type="text/javascript" src="jCanvaScript-1.5.1.js"></script>
+<script type="text/javascript" src="bezierkey.js"></script>
+<script type="text/javascript" src="Draw.js"></script>
+<script type="text/javascript" src="Area.js"></script>
+<script type="text/javascript" src="Map.js"></script>
+<script type="text/javascript">
+//http://neversayever.com/blog/2012/01/2056/
+//http://blog.csdn.net/microchenhong/article/details/6316332
+//http://www.cnblogs.com/flash3d/archive/2012/01/30/2332176.html
+
+var screen  	= $("#screen")[0];
+var context 	= screen.getContext('2d');
+var points 		= [];		//鼠标点击的点的坐标集合
+
+var allpp   	= [];		//所有曲线经过的点的坐标集合 x:横坐标, y:纵坐标, type:0向上凸,1向下凸,2端点,3普通点
+var allextreme 	= [];	    //所有的凸极值点
+var allbound    = [];		//所有的相邻边界
+
+var pointState  = true;
+var startYes 	= false;	//控制当前的鼠标状态：是要画起点和终点，还是要画障碍物
+var startY      = false;	//是否已经确认了起点和终点的坐标
+var endYes  	= false;
+var endY        = false;
+
+var ap          = null;
+var area        = null;
+
+var startCoor   = null;		//起点的坐标
+var endCoor     = null;
+
+//鼠标左键点击事件
+screen.addEventListener("click",function(event){
+	var x=event.clientX+(document.documentElement.scrollLeft || document.body.scrollLeft);
+	var y=event.clientY+(document.documentElement.scrollTop || document.body.scrollTop);
+	
+	if(startYes==true){
+		startYes = false;
+		startY = true;
+		Draw.drawCircle(x, y, 4, 'red', true);
+		startCoor = {'x':x, 'y':y};
+		return;
+	}
+	if(endYes==true){
+		endYes = false;
+		endY = true;
+		Draw.drawCircle(x, y, 4, 'red', true);
+		endCoor = {'x':x, 'y':y};
+		return;
+	}
+	if(pointState==false){
+		return;
+	}
+	
+	var t = points.length;
+	if(t>0 && Math.abs(x-points[0].x)<=12 && Math.abs(y-points[0].y)<12){
+		var extrapoints = bezierkey.getExtra(points);
+		var pp          = Draw.drawBezier(points, extrapoints, '#CCC', 1, true);
+		var extreme     = bezierkey.getExtreme(pp);
+		
+		allpp.push(pp);
+		allextreme = allextreme.concat(extreme);
+		
+		//清除之前画的点和线，只保留拟合出来的曲线
+		Draw.deleteGraph('#qi');
+		for(var i=0; i<t; i++){
+			Draw.deleteGraph('#line'+i);
+			Draw.deleteGraph('#circle'+i);
+		}
+		
+		points = [];
+		points.length = 0;
+		return;
+	}
+
+	points.push({'x':x, 'y':y});
+	t++;
+	
+	Draw.drawCircle(x, y, 3, "#FF6666", true, 'circle'+(t-1));
+	if(t==1){
+		Draw.drawCircle(x, y, 12, "rgb(32, 178, 170)", false, 'qi');
+	}else{
+		Draw.drawLine([[points[t-2].x, points[t-2].y], [points[t-1].x, points[t-1].y]], '#CCC', 1, 'line'+(t-1));
+	}
+},true);
+
+//鼠标移动事件
+screen.addEventListener('mousemove', function(event){
+	var x=event.clientX+(document.documentElement.scrollLeft || document.body.scrollLeft);
+	var y=event.clientY+(document.documentElement.scrollTop || document.body.scrollTop);
+	$('#point').html('x:'+x+' ;y:'+y);
+	
+	x-=12, y-=30;
+	if(startYes == true){
+		$('#startImg').css('top', y+'px').css('left', x+'px');
+	}
+	if(endYes == true){
+		$('#endImg').css('top', y+'px').css('left', x+'px');
+	}
+}, true);
+
+$('#startBtn').click(function(){
+	startYes = true;
+	$("#screen").css('cursor', 'auto');
+	$("#startBtn").css('display', 'none');
+	$('#startImg').css('display', 'block');
+});
+
+$('#endBtn').click(function(){
+	endYes = true;
+	$("#screen").css('cursor', 'auto');
+	$("#endBtn").css('display', 'none');
+	$('#endImg').css('display', 'block');
+});
+
+
+$("#tangent").click(function(){
+	//console.log(allpp);
+	//console.log(allextreme);
+	$(this).attr('disabled', 'disabled');
+	$("#screen").css('cursor', 'not-allowed');
+	document.onselectstart = click;
+	function click(){
+		pointState = false;
+	}
+	var xextreme = [];
+	for(var i=0, t=allextreme.length; i<t; i++){
+		Draw.drawCircle(allextreme[i].x, allextreme[i].y, 3, '#000000', true);
+		var s = bezierkey.tangentPoint(allextreme[i], allpp);
+		xextreme.push(
+			{
+				'left':s.xmin, 				// 水平切线左端点的横坐标
+				'mid':allextreme[i].x, 		// 水平切线切点的横坐标
+				'right':s.xmax, 			// 水平切线右端点的横坐标
+				'y':allextreme[i].y, 		// 水平切线的纵坐标
+				'type':allextreme[i].type, 	// 
+				'lvisited':0, 				// 左端点是否被访问过：0未被访问, 1已被访问过
+				'rvisited':0				// 右端点是否被访问过：0未被访问, 1已被访问过
+			}
+		);
+		allbound.push([s.xmin, allextreme[i].x, allextreme[i].y]);
+		allbound.push([allextreme[i].x, s.xmax, allextreme[i].y]);
+		Draw.drawLine([[s.xmin, allextreme[i].y], [s.xmax, allextreme[i].y]], '#000000', 1);
+	}
+	//console.log(allbound);
+	Area.xextreme = xextreme;
+	Area.pp       = allpp;
+	ap = Area.init(0, 800, 0);
+	//console.log(ap);
+	area = Map.areaConn(ap);
+	console.log(area);
+	
+	//$("#screen").css('cursor', 'auto');
+	$("#start").css('display', 'block');
+	$("#end").css('display', 'block');
+});
+
+
+$("#finish").click(function(){
+	var startArea = $("#start").val();	//起点所在的区域
+	var endArea   = $("#end").val();	//终点所在的区域
+
+	if(startY==false || endY==false || startArea=='' || endArea==''){
+		alert('请确认起点和终点');
+		return;
+	}
+	
+	
+	var er = Map.aer(area, parseInt(startArea), parseInt(startArea), parseInt(endArea), []);			//邻接表
+	var connArea = Map.connArea(allbound, ap);	//相邻区域的公共边
+	var wayPoints = [];
+	$("#tip").append('====================<br/>');
+	for(var i=0, t=er.length; i<t; i++){
+		var arr = er[i];
+		var brr = [[startCoor.x, startCoor.y]];
+		for(var j=0, tt=arr.length; j<tt; j++){
+			$("#tip").append(arr[j]+', ');
+		}
+		$("#tip").append('<br/>');
+		for(var j=0, tt=arr.length-1; j<tt; j++){
+			var s = connArea[arr[j]+','+arr[j+1]];
+			$("#tip").append(arr[j]+'->'+arr[j+1]+':'+s+'<br/>');
+			var x = (s[0]+s[1])/2;
+			var y = s[2];
+			brr.push([x, y]);
+		}
+		brr.push([endCoor.x, endCoor.y]);
+		wayPoints.push(brr);
+		//Draw.drawLine(brr, '#EE799F');
+		$("#tip").append('-------------------------<br/>');
+	}
+	var minway = Map.way(wayPoints);
+	for(var i=0, t=wayPoints.length; i<t; i++){
+		Draw.drawLine(wayPoints[i], "#EED5B7", 0.1);
+	}
+	Draw.drawLine(wayPoints[minway], "#FF0303", 2);
+});
+</script>
