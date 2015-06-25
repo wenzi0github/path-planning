@@ -41,11 +41,11 @@ var Map = {
 		var dis = this.pointDis(p[step] ,p[step+1]);
 		var t   = dis*5;
 		$("#startImg").animate({left:p[step+1][0]-12, top:p[step+1][1]-10}, t, 'linear');
-		jc.start("screen", true);
+		jc.start("myCanvas", true);
 		jc.line([p[step], p[step]], "rgb(250, 3, 3)")
 			.lineStyle({lineWidth:2})
 			.animate({x1:p[step+1][0],y1:p[step+1][1]}, t);
-		jc.start("screen", true);
+		jc.start("myCanvas", true);
 		setTimeout(function(obj,step){
 			return function(){obj.asd(step);}
 		}(this, ++step),t+100);
