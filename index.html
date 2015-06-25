@@ -14,7 +14,7 @@ img{width:24px;height:24px;border:0}
 </head>
 <body>
 <div class="mycancas">
-	<canvas id="screen" width="800" height="600">骚瑞，您的浏览器不支持canvas</canvas>
+	<canvas id="myCanvas" width="800" height="600">骚瑞，您的浏览器不支持canvas</canvas>
 	<img src="start.jpg" id='startImg' alt="startImg" style='position:absolute; display:none;'/>
 	<img src="end.png" id='endImg' alt="endImg" style='position:absolute; display:none;'/>
 </div>
@@ -47,8 +47,8 @@ img{width:24px;height:24px;border:0}
 //http://blog.csdn.net/microchenhong/article/details/6316332
 //http://www.cnblogs.com/flash3d/archive/2012/01/30/2332176.html
 
-var screen  	= $("#screen")[0];
-var context 	= screen.getContext('2d');
+var myCanvas  	= $("#myCanvas")[0];
+var context 	= myCanvas.getContext('2d');
 var points 		= [];		//鼠标点击的点的坐标集合
 
 var allpp   	= [];		//所有曲线经过的点的坐标集合 x:横坐标, y:纵坐标, type:0向上凸,1向下凸,2端点,3普通点
@@ -68,7 +68,7 @@ var startCoor   = null;		//起点的坐标
 var endCoor     = null;
 
 //鼠标左键点击事件
-screen.addEventListener("click",function(event){
+myCanvas.addEventListener("click",function(event){
 	var x=event.clientX+(document.documentElement.scrollLeft || document.body.scrollLeft);
 	var y=event.clientY+(document.documentElement.scrollTop || document.body.scrollTop);
 	
@@ -123,7 +123,7 @@ screen.addEventListener("click",function(event){
 },true);
 
 //鼠标移动事件
-screen.addEventListener('mousemove', function(event){
+myCanvas.addEventListener('mousemove', function(event){
 	var x=event.clientX+(document.documentElement.scrollLeft || document.body.scrollLeft);
 	var y=event.clientY+(document.documentElement.scrollTop || document.body.scrollTop);
 	$('#point').html('x:'+x+' ;y:'+y);
@@ -139,14 +139,14 @@ screen.addEventListener('mousemove', function(event){
 
 $('#startBtn').click(function(){
 	startYes = true;
-	$("#screen").css('cursor', 'auto');
+	$("#myCanvas").css('cursor', 'auto');
 	$("#startBtn").css('display', 'none');
 	$('#startImg').css('display', 'block');
 });
 
 $('#endBtn').click(function(){
 	endYes = true;
-	$("#screen").css('cursor', 'auto');
+	$("#myCanvas").css('cursor', 'auto');
 	$("#endBtn").css('display', 'none');
 	$('#endImg').css('display', 'block');
 });
@@ -156,7 +156,7 @@ $("#tangent").click(function(){
 	//console.log(allpp);
 	//console.log(allextreme);
 	$(this).attr('disabled', 'disabled');
-	$("#screen").css('cursor', 'not-allowed');
+	$("#myCanvas").css('cursor', 'not-allowed');
 	document.onselectstart = click;
 	function click(){
 		pointState = false;
@@ -188,7 +188,7 @@ $("#tangent").click(function(){
 	area = Map.areaConn(ap);
 	console.log(area);
 	
-	//$("#screen").css('cursor', 'auto');
+	//$("#myCanvas").css('cursor', 'auto');
 	$("#start").css('display', 'block');
 	$("#end").css('display', 'block');
 });
