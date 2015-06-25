@@ -9,20 +9,20 @@ var Draw = {
 	 * @param	circleId 圆的编号
 	 */
 	drawCircle : function(x, y, b, c, bool, circleId){
-		jc.start('screen');
+		jc.start('myCanvas');
 		b || (b=2);
 		c || (c="red");
 		jc.circle(x, y, b, c, bool).id(circleId)
-		jc.start('screen');
+		jc.start('myCanvas');
 	},
 	
 	//线
 	//points [[x0, y0], [x1, y1], ...]
 	drawLine : function(points, color, lw, lineId){
-		jc.start('screen');
+		jc.start('myCanvas');
 		jc('#srceen').lineStyle({lineWidth:lw});
 		jc.line(points, color).id(lineId);
-		jc.start('screen');
+		jc.start('myCanvas');
 	},
 	
 	//三次贝塞尔曲线
@@ -38,11 +38,11 @@ var Draw = {
 			var p = bezierkey.passPoints(points[i], extrapoints[i*2+1], extrapoints[nexti*2], points[nexti]);
 			pp = pp.concat(p);
 		}
-		jc.start('screen', true);
+		jc.start('myCanvas', true);
 		jc('#srceen').lineStyle(lineWidth);
 		jc.b3Curve(arr,color, fill);
 		//jc.b3Curve([[points[i].x, points[i].y, extrapoints[i*2+1].x, extrapoints[i*2+1].y, extrapoints[nexti*2].x, extrapoints[nexti*2].y, points[nexti].x, points[nexti].y]], '#00ffbb');
-		jc.start('screen', true);
+		jc.start('myCanvas', true);
 
 		return pp;
 	},
@@ -57,15 +57,15 @@ var Draw = {
 	 * @param	fill		bool			是否填充
 	 */
 	drawText:function(string, x, y, maxWidth, color, fill){
-		jc.start('screen');
+		jc.start('myCanvas');
 		jc.text(string, x, y, maxWidth, color, fill);
-		jc.start('screen');
+		jc.start('myCanvas');
 	},
 	
 	//删除id对应的图形
 	deleteGraph:function(id){
-		jc.start('screen');
+		jc.start('myCanvas');
 		jc(id).del();
-		jc.start('screen');
+		jc.start('myCanvas');
 	}
 }
